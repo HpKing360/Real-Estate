@@ -1,10 +1,25 @@
 import Listing from "../models/listingModel.js";
 import { errorHandler } from "../utils/error.js";
 
+// export const createListing = async (req, res, next) => {
+//   try {
+//     const listing = await Listing.create(req.body);
+
+//     return res.status(201).json(listing);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 export const createListing = async (req, res, next) => {
   try {
-    const listing = await Listing.create(req.body);
+    console.log("Incoming Listing Data:", req.body); // ✅ Debugging
 
+    if (!req.body.phoneNumber) {
+      return next(errorHandler(400, "Phone number is required!"));
+    }
+
+    const listing = await Listing.create(req.body);
     return res.status(201).json(listing);
   } catch (error) {
     next(error);
@@ -52,17 +67,33 @@ export const updateListing = async (req, res, next) => {
   }
 };
 
+// export const getListing = async (req, res, next) => {
+//   try {
+//     const listing = await Listing.findById(req.params.id);
+//     if (!listing) {
+//       return next(errorHandler(404, "Listing not found!"));
+//     }
+//     res.status(200).json(listing);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 export const getListing = async (req, res, next) => {
   try {
     const listing = await Listing.findById(req.params.id);
     if (!listing) {
       return next(errorHandler(404, "Listing not found!"));
     }
+
+    console.log("Fetched Listing Data:", listing); // ✅ Debugging
+
     res.status(200).json(listing);
   } catch (error) {
     next(error);
   }
 };
+
 
 export const getListigs = async (req, res, next) => {
   try {

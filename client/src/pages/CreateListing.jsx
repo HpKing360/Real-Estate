@@ -13,11 +13,15 @@ const CreateListing = () => {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [files, setFiles] = useState([]);
+
+  const [location, setLocation] = useState("");
+
   const [formData, setFormData] = useState({
     imageUrls: [],
     name: "",
     description: "",
     address: "",
+    phoneNumber: "",
     type: "rent",
     bedrooms: 1,
     bathrooms: 1,
@@ -26,6 +30,9 @@ const CreateListing = () => {
     offer: false,
     parking: false,
     furnished: false,
+    bachelor: false,
+    katha: "",
+    isVerified: false, 
   });
   const [imageUploadError, setImageUploadError] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -116,7 +123,8 @@ const CreateListing = () => {
     if (
       e.target.type === "number" ||
       e.target.type === "text" ||
-      e.target.type === "textarea"
+      e.target.type === "textarea"||
+      e.target.tagName === "SELECT"
     ) {
       setFormData({
         ...formData,
@@ -125,40 +133,94 @@ const CreateListing = () => {
     }
   };
 
+
+  const handleSavePhoneNumber = () => {
+    setListing({ ...listing, phoneNumber: formData.phoneNumber });
+  };
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     if (formData.imageUrls.length < 1)
+  //       return setError("You must upload at least one image!");
+
+  //     if (+formData.regularPrice < +formData.discountPrice)
+  //       return setError("Discount price must be lower than regular price");
+
+  //     setLoading(true);
+  //     setError(false);
+
+  //     const res = await fetch("/api/listing/create", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         ...formData,
+  //         location,
+  //         userRef: currentUser._id,
+  //       }),
+  //     });
+
+  //     const data = await res.json();
+  //     setLoading(false);
+  //     if (data.success === false) {
+  //       setError(data.message);
+  //     }
+  //     navigate(`/listing/${data._id}`);
+  //   } catch (error) {
+  //     setError(error.message);
+  //     setLoading(false);
+  //   }
+  // };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (formData.imageUrls.length < 1)
         return setError("You must upload at least one image!");
-
+  
       if (+formData.regularPrice < +formData.discountPrice)
         return setError("Discount price must be lower than regular price");
-
+  
+      if (!formData.phoneNumber.trim()) 
+        return setError("Phone number is required!"); // ✅ Phone number validation
+  
       setLoading(true);
       setError(false);
-
+  
+      const newListing = {
+        ...formData,
+        phoneNumber: formData.phoneNumber, // ✅ Ensure phoneNumber is included
+        userRef: currentUser._id,
+      };
+  
+      console.log("Submitting Data:", newListing); // Debugging
+  
       const res = await fetch("/api/listing/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...formData,
-          userRef: currentUser._id,
-        }),
+        body: JSON.stringify(newListing),
       });
-
+  
       const data = await res.json();
       setLoading(false);
-      if (data.success === false) {
-        setError(data.message);
+  
+      if (!res.ok) {
+        return setError(data.message || "Something went wrong!");
       }
+  
       navigate(`/listing/${data._id}`);
     } catch (error) {
       setError(error.message);
       setLoading(false);
     }
   };
+  
+  
 
   return (
     <main className="p-3 max-w-4xl mx-auto">
@@ -196,6 +258,68 @@ const CreateListing = () => {
             onChange={handleChange}
             value={formData.address}
           />
+
+          {/* <input
+            type="tel"
+            placeholder="Enter phone number"
+            className="border p-3 rounded-lg"
+            value={formData.phoneNumber}
+            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+            required
+          /> */}
+
+<input
+  type="tel"
+  placeholder="Enter phone number"
+  className="border p-3 rounded-lg"
+  value={formData.phoneNumber}
+  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} 
+  required
+/>
+<button 
+  className="bg-blue-500 text-white px-4 py-2 rounded-md mt-2"
+  onClick={handleSavePhoneNumber} // Save the phone number
+>
+  Save Contact
+</button>
+
+
+      <div className="flex flex-col gap-4">
+        {/* Input for location */}
+        <input
+          type="text"
+          placeholder="Enter property location"
+          className="border p-3 rounded-lg"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
+
+        {/* Display Map Only When Location is Entered */}
+        {location && (
+          <iframe
+            title="map"
+            className="w-full h-64 border rounded-lg"
+            src={`https://www.google.com/maps?q=${encodeURIComponent(
+              location
+            )}&output=embed`}
+            allowFullScreen=""
+            loading="lazy"
+          ></iframe>
+        )}
+      </div>
+
+        <select
+          id="katha"
+          required
+          onChange={handleChange}
+          value={formData.katha}
+          className="border p-3 rounded-lg"
+        >
+          <option value="">Select Katha Type</option>
+          <option value="A Katha">A Katha</option>
+          <option value="B Katha">B Katha</option>
+          <option value="Others">Others</option>
+        </select>
 
           <div className="flex gap-6 flex-wrap">
             <div className="flex gap-2">
@@ -238,6 +362,8 @@ const CreateListing = () => {
               />
               <span>Furnished</span>
             </div>
+            
+
             <div className="flex gap-2">
               <input
                 type="checkbox"
@@ -277,6 +403,8 @@ const CreateListing = () => {
               />
               <p>Baths</p>
             </div>
+
+
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -290,7 +418,7 @@ const CreateListing = () => {
               />
               <div className="flex flex-col items-center">
                 <p>Regular Price</p>
-                <span className="text-xs">($ / Month)</span>
+                <span className="text-xs">(₹ / Month)</span>
               </div>
             </div>
 
@@ -308,12 +436,14 @@ const CreateListing = () => {
                 />
                 <div className="flex flex-col items-center">
                   <p>Discounted Price</p>
-                  <span className="text-xs">($ / Month)</span>
+                  <span className="text-xs">(₹ / Month)</span>
                 </div>
               </div>
             )}
           </div>
         </div>
+          
+
 
         <div className="flex flex-col flex-1 gap-4">
           <p className="font-semibold">
@@ -369,6 +499,62 @@ const CreateListing = () => {
             {loading ? "Creating...." : "Create Listing"}
           </button>
           {error && <p className="text-red-700 text-sm">{error}</p>}
+
+
+      {/* Verify Option */}
+<div className="mt-4">
+  <label className="block text-lg font-semibold">Verification:</label>
+  <div className="flex gap-6 mt-2">
+    <div className="flex gap-2">
+      <input
+        type="radio"
+        id="withoutVerify"
+        name="verify"
+        checked={!formData.isVerified}
+        onChange={() => setFormData({ ...formData, isVerified: false })}
+      />
+      <label htmlFor="withoutVerify">Without Verify</label>
+    </div>
+    <div className="flex gap-2">
+      <input
+        type="radio"
+        id="withVerify"
+        name="verify"
+        checked={formData.isVerified}
+        onChange={async () => {
+          setFormData({ ...formData, isVerified: true });
+
+          try {
+            const res = await fetch("/api/email/send-verification-email", { // ✅ Fixed endpoint
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                listingDetails: formData, // Include listing data
+              }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+              throw new Error(data.message || "Failed to send email.");
+            }
+
+            alert("Verification request sent to admin!");
+          } catch (error) {
+            console.error("Error sending verification email:", error);
+            alert("Error sending email. Please try again.");
+          }
+        }}
+      />
+      <label htmlFor="withVerify">With Verify</label>
+    </div>
+  </div>
+</div>
+
+
+
+
         </div>
       </form>
     </main>
@@ -376,3 +562,5 @@ const CreateListing = () => {
 };
 
 export default CreateListing;
+
+

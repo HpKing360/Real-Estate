@@ -21,6 +21,8 @@ import {
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 
+import { useNavigate } from "react-router-dom";
+
 const Profile = () => {
   const fileRef = useRef(null);
   const { currentUser, loading, error } = useSelector((state) => state.user);
@@ -132,19 +134,25 @@ const Profile = () => {
     }
   };
 
-  const handleShowListings = async () => {
-    try {
-      setShowListingsError(false);
-      const res = await fetch(`/api/user/listings/${currentUser._id}`);
-      const data = await res.json();
-      if (data.success === false) {
-        setShowListingsError(true);
-        return;
-      }
-      setUserListings(data);
-    } catch (error) {
-      showListingsError(true);
-    }
+  // const handleShowListings = async () => {
+  //   try {
+  //     setShowListingsError(false);
+  //     const res = await fetch(`/api/user/listings/${currentUser._id}`);
+  //     const data = await res.json();
+  //     if (data.success === false) {
+  //       setShowListingsError(true);
+  //       return;
+  //     }
+  //     setUserListings(data);
+  //   } catch (error) {
+  //     showListingsError(true);
+  //   }
+  // };
+
+  const navigate = useNavigate();
+
+  const handleShowListings = () => {
+    navigate("/user-listings");
   };
 
   const handleListingDelete = async (listingId) => {

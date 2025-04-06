@@ -14,11 +14,15 @@ const UpdateListing = () => {
   const navigate = useNavigate();
   const params = useParams();
   const [files, setFiles] = useState([]);
+
+  const [location, setLocation] = useState("");
+
   const [formData, setFormData] = useState({
     imageUrls: [],
     name: "",
     description: "",
     address: "",
+    phoneNumber: "",
     type: "rent",
     bedrooms: 1,
     bathrooms: 1,
@@ -27,27 +31,63 @@ const UpdateListing = () => {
     offer: false,
     parking: false,
     furnished: false,
+    bachelor: false,
+    katha: "",
+    isVerified: false,
   });
   const [imageUploadError, setImageUploadError] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
 
+
   useEffect(() => {
     const fetchListing = async () => {
-      const listingId = params.listingId;
-      const res = await fetch(`/api/listing/get/${listingId}`);
-      const data = await res.json();
-
-      if (data.success === false) {
-        console.log(data.message);
-        return;
+      try {
+        const listingId = params.listingId;
+        console.log("Fetching listing with ID:", listingId); // 🔍 Debugging log
+        const res = await fetch(`/api/listing/get/${listingId}`);
+        const data = await res.json();
+  
+        console.log("Fetched Data:", data); // 🔍 Debugging log
+  
+        if (data.success === false) {
+          console.log(data.message);
+          return;
+        }
+  
+        setFormData({
+          imageUrls: data.imageUrls || [],
+          name: data.name || "",
+          description: data.description || "",
+          address: data.address || "",
+          phoneNumber: data.phoneNumber || "", // ✅ Ensure phoneNumber is set
+          type: data.type || "rent",
+          bedrooms: data.bedrooms || 1,
+          bathrooms: data.bathrooms || 1,
+          regularPrice: data.regularPrice || 50,
+          discountPrice: data.discountPrice || 0,
+          offer: data.offer || false,
+          parking: data.parking || false,
+          furnished: data.furnished || false,
+          bachelor: data.bachelor || false,
+          katha: data.katha || "",
+          isVerified: data.isVerified || false,
+        });
+        setLocation(data.location || "");
+      } catch (error) {
+        console.error("Error fetching listing:", error);
       }
-
-      setFormData(data);
     };
+  
     fetchListing();
   }, []);
+  
+
+  const handleSavePhoneNumber = () => {
+    setListing({ ...listing, phoneNumber: formData.phoneNumber });
+  };
+
 
   const handleImageSubmit = (e) => {
     if (files.length > 0 && files.length + formData.imageUrls.length < 7) {
@@ -110,71 +150,150 @@ const UpdateListing = () => {
     });
   };
 
+  // const handleChange = (e) => {
+  //   if (e.target.id === "sale" || e.target.id === "rent") {
+  //     setFormData({
+  //       ...formData,
+  //       type: e.target.id,
+  //     });
+  //   }
+
+  //   if (
+  //     e.target.id === "parking" ||
+  //     e.target.id === "furnished" ||
+  //     e.target.id === "offer"
+  //   ) {
+  //     setFormData({
+  //       ...formData,
+  //       [e.target.id]: e.target.checked,
+  //     });
+  //   }
+
+  //   if (
+  //     e.target.type === "number" ||
+  //     e.target.type === "text" ||
+  //     e.target.type === "textarea"||
+  //     e.target.type === "tel" ||
+  //     e.target.tagName === "SELECT"
+  //   ) {
+  //     setFormData({
+  //       ...formData,
+  //       [e.target.id]: e.target.value,
+  //     });
+  //   }
+  // };
+ 
   const handleChange = (e) => {
-    if (e.target.id === "sale" || e.target.id === "rent") {
-      setFormData({
-        ...formData,
-        type: e.target.id,
-      });
+    const { id, value, checked, type, tagName } = e.target;
+  
+    console.log("Changed:", id, value); // 🔍 Debugging log
+  
+    if (id === "sale" || id === "rent") {
+      setFormData({ ...formData, type: id });
+    } else if (id === "parking" || id === "furnished" || id === "offer") {
+      setFormData({ ...formData, [id]: checked });
+    } else if (type === "number" || type === "text" || type === "textarea" || type === "tel" || tagName === "SELECT") {
+      setFormData({ ...formData, [id]: value });
     }
-
-    if (
-      e.target.id === "parking" ||
-      e.target.id === "furnished" ||
-      e.target.id === "offer"
-    ) {
-      setFormData({
-        ...formData,
-        [e.target.id]: e.target.checked,
-      });
-    }
-
-    if (
-      e.target.type === "number" ||
-      e.target.type === "text" ||
-      e.target.type === "textarea"
-    ) {
-      setFormData({
-        ...formData,
-        [e.target.id]: e.target.value,
-      });
-    }
+  
+    console.log("Updated formData:", formData); // 🔍 Debugging log
   };
+  
+  
+  
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     if (formData.imageUrls.length < 1)
+  //       return setError("You must upload at least one image!");
+
+  //     if (+formData.regularPrice < +formData.discountPrice)
+  //       return setError("Discount price must be lower than regular price");
+
+  //     setLoading(true);
+  //     setError(false);
+
+  //     const updatedData = {
+  //       ...formData,
+  //       location,  // Ensure location is included
+  //       phoneNumber: formData.phoneNumber, // Ensure phoneNumber is included
+  //       katha: formData.katha, // Ensure katha is included
+  //       userRef: currentUser._id,
+  //     };
+
+  //     const res = await fetch(`/api/listing/update/${params.listingId}`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         ...formData,
+  //         location,
+  //         userRef: currentUser._id,
+  //       }),
+  //     });
+
+  //     const data = await res.json();
+  //     setLoading(false);
+  //     if (data.success === false) {
+  //       setError(data.message);
+  //     }
+  //     navigate(`/listing/${data._id}`);
+  //   } catch (error) {
+  //     setError(error.message);
+  //     setLoading(false);
+  //   }
+  // };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (formData.imageUrls.length < 1)
         return setError("You must upload at least one image!");
-
+  
       if (+formData.regularPrice < +formData.discountPrice)
         return setError("Discount price must be lower than regular price");
-
+  
       setLoading(true);
       setError(false);
-
+  
+      const updatedData = {
+        ...formData,
+        location, // ✅ Ensure location is included
+        phoneNumber: formData.phoneNumber, // ✅ Ensure phoneNumber is included
+        katha: formData.katha, // ✅ Ensure katha is included
+        userRef: currentUser._id,
+      };
+  
+      console.log("Submitting Data:", updatedData); // 🔍 Debugging log
+  
       const res = await fetch(`/api/listing/update/${params.listingId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...formData,
-          userRef: currentUser._id,
-        }),
+        body: JSON.stringify(updatedData),
       });
-
+  
       const data = await res.json();
       setLoading(false);
+      
+      console.log("Response from server:", data); // 🔍 Debugging log
+  
       if (data.success === false) {
         setError(data.message);
+      } else {
+        navigate(`/listing/${data._id}`);
       }
-      navigate(`/listing/${data._id}`);
     } catch (error) {
       setError(error.message);
       setLoading(false);
+      console.error("Error submitting form:", error);
     }
   };
+  
 
   return (
     <main className="p-3 max-w-4xl mx-auto">
@@ -212,6 +331,67 @@ const UpdateListing = () => {
             onChange={handleChange}
             value={formData.address}
           />
+
+            {/* <input
+              type="tel"
+              placeholder="Enter phone number"
+              className="border p-3 rounded-lg"
+              id="phoneNumber" // ✅ Ensure it has an ID
+              value={formData.phoneNumber}
+              onChange={handleChange} // ✅ Now it works with the handleChange function
+              required
+            /> */}
+            <input
+              type="tel"
+              placeholder="Enter phone number"
+              className="border p-3 rounded-lg"
+              value={formData.phoneNumber}
+              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} 
+              required
+            />
+            <button 
+              className="bg-blue-500 text-white px-4 py-2 rounded-md mt-2"
+              onClick={handleSavePhoneNumber} // Save the phone number
+            >
+              Save Contact
+            </button>
+
+<div className="flex flex-col gap-4">
+        {/* Input for location */}
+        <input
+          type="text"
+          placeholder="Enter property location"
+          className="border p-3 rounded-lg"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
+
+        {/* Display Map Only When Location is Entered */}
+        {location && (
+          <iframe
+            title="map"
+            className="w-full h-64 border rounded-lg"
+            src={`https://www.google.com/maps?q=${encodeURIComponent(
+              location
+            )}&output=embed`}
+            allowFullScreen=""
+            loading="lazy"
+          ></iframe>
+        )}
+      </div>
+
+        <select
+          id="katha"
+          required
+          onChange={handleChange}
+          value={formData.katha}
+          className="border p-3 rounded-lg"
+        >
+          <option value="">Select Katha Type</option>
+          <option value="A Katha">A Katha</option>
+          <option value="B Katha">B Katha</option>
+          <option value="Others">Others</option>
+        </select>
 
           <div className="flex gap-6 flex-wrap">
             <div className="flex gap-2">

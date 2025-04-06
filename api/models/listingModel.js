@@ -14,6 +14,10 @@ const listingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    phoneNumber: {
+      type: String,
+      required: true, // Ensure every listing has a phone number
+    },
     regularPrice: {
       type: Number,
       required: true,
